@@ -1,0 +1,2 @@
+kubeconfig_path    = "~/.kube/k3s-harus"
+kubeconfig_context = "default"

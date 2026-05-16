@@ -1,0 +1,17 @@
+terraform {
+  cloud {
+    organization = "Harus"
+    workspaces {
+      name = "harus-prod-iam"
+    }
+  }
+
+  required_version = ">= 1.5"
+
+  required_providers {
+    oci = {
+      source  = "oracle/oci"
+      version = "~> 8.13"
+    }
+  }
+}

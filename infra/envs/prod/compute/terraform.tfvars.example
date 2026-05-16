@@ -1,0 +1,13 @@
+region           = "sa-vinhedo-1"
+user_ocid        = "ocid1.user.oc1..xxx"
+fingerprint      = "aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99:00"
+tenancy_ocid     = "ocid1.tenancy.oc1..xxx"
+private_key      = <<-EOT
+  -----BEGIN PRIVATE KEY-----
+  MIIE...
+  -----END PRIVATE KEY-----
+EOT
+compartment_ocid = "ocid1.compartment.oc1..xxx"
+
+ssh_public_key          = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5... user@host"
+cloudflare_tunnel_token = "eyJhIjoi..."

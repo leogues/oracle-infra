@@ -1,0 +1,26 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Local tfvars (secrets)
+*.tfvars
+!*.tfvars.example
+
+# Local env (secrets)
+secrets.env
+.envrc
+
+# OCI keys (NEVER commit)
+keys/
+*.pem
+
+# SOPS decrypted secrets (NEVER commit)
+*.dec.json
+
+# OS
+.DS_Store
+
+.planning/

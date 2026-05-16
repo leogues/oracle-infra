@@ -1,0 +1,31 @@
+repos:
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.2
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+        args:
+          - --tf-init-args=-backend=false
+          - --tf-init-args=-input=false
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+        exclude: '(\.terraform\.lock\.hcl|\.enc\.json)$'
+      - id: trailing-whitespace
+        exclude: '(\.terraform\.lock\.hcl|\.enc\.json)$'
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: '^infra/envs/prod/k8s/secrets/namespaces/.*\.enc\.json$'
+      - id: check-json
+        exclude: '\.enc\.json$'
+      - id: check-merge-conflict
+      - id: detect-private-key
+        exclude: '^infra/envs/prod/.*\.tfvars\.example$'
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning]
