@@ -1,0 +1,73 @@
+#cloud-config
+
+package_update: true
+
+write_files:
+  - path: /var/lib/cloud/scripts/per-once/install-k3s-stack.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      exec > >(tee -a /var/log/k3s-bootstrap.log) 2>&1
+
+      iptables -P INPUT ACCEPT
+      iptables -F INPUT
+      ip6tables -P INPUT ACCEPT
+      ip6tables -F INPUT
+      netfilter-persistent save
+
+      INSTANCE_OCID=$(curl -sfH "Authorization: Bearer Oracle" http://169.254.169.254/opc/v2/instance/id)
+
+      curl -sfL https://get.k3s.io | \
+        INSTALL_K3S_EXEC="server --disable=traefik --disable=servicelb --disable-cloud-controller --kubelet-arg=cloud-provider=external --kubelet-arg=provider-id=oci://$INSTANCE_OCID" \
+        K3S_TOKEN='${k3s_token}' \
+        sh -
+
+      mkdir -p /home/ubuntu/.kube
+      install -o ubuntu -g ubuntu -m 0600 /etc/rancher/k3s/k3s.yaml /home/ubuntu/.kube/config
+
+      curl -fsSL https://get.helm.sh/helm-v3.16.3-linux-arm64.tar.gz | tar -xz -C /tmp
+      install -m 0755 /tmp/linux-arm64/helm /usr/local/bin/helm
+
+      export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+      until kubectl get nodes 2>/dev/null | grep -q ' Ready '; do sleep 5; done
+
+      cat <<EOF | kubectl apply -f -
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: oci-cloud-controller-manager
+        namespace: kube-system
+      type: Opaque
+      stringData:
+        cloud-provider.yaml: |
+          useInstancePrincipals: true
+          compartment: ${compartment_ocid}
+          vcn: ${vcn_id}
+          loadBalancer:
+            subnet1: ${ccm_lb_subnet_id}
+            securityListManagementMode: "None"
+      EOF
+
+      kubectl apply \
+        -f https://github.com/oracle/oci-cloud-controller-manager/releases/download/${ccm_version}/oci-cloud-controller-manager-rbac.yaml \
+        -f https://github.com/oracle/oci-cloud-controller-manager/releases/download/${ccm_version}/oci-cloud-controller-manager.yaml
+
+      kubectl -n kube-system patch ds oci-cloud-controller-manager --type=json \
+        -p='[{"op":"add","path":"/spec/template/spec/nodeSelector","value":{"node-role.kubernetes.io/control-plane":"true"}}]'
+
+      until ! kubectl get node "$(hostname)" -o jsonpath='{.spec.taints[*].key}' | grep -q "node.cloudprovider.kubernetes.io/uninitialized"; do
+        echo "waiting CCM to untaint node..."
+        sleep 5
+      done
+
+      kubectl create namespace cloudflared --dry-run=client -o yaml | kubectl apply -f -
+      helm repo add cloudflare https://cloudflare.github.io/helm-charts
+      helm repo update
+      helm upgrade --install cloudflared cloudflare/cloudflare-tunnel-remote \
+        --namespace cloudflared \
+        --set-string cloudflare.tunnel_token='${cloudflare_tunnel_token}' \
+        --set replicaCount=1 \
+        --wait --atomic --timeout 5m
+
+      echo "bootstrap done $(date)"
