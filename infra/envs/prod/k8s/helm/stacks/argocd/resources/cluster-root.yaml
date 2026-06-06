@@ -1,16 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: platform-root
+  name: cluster-root
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io/foreground
 spec:
-  project: platform
+  project: default
   source:
     repoURL: https://github.com/leogues/oracle-gitops.git
     targetRevision: main
-    path: platform/_groups
+    path: cluster
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -22,5 +24,4 @@ spec:
     syncOptions:
       - Validate=true
       - ServerSideApply=true
-      - PrunePropagationPolicy=foreground
       - PruneLast=true

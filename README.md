@@ -47,7 +47,7 @@ Naming convention and tag taxonomy are documented in
 | `net` | VCN, IGW, NAT/Service GW, public + private subnets, route tables, security lists |
 | `compute` | k3s server + worker VMs. Cloud-init installs k3s, CCM, and cloudflared (Cloudflare Zero Trust tunnel) |
 | `k8s/secrets` | SOPS-encrypted secrets decrypted in-memory and applied as `kubernetes_secret_v1`. Ensures every target namespace exists via `kubectl_manifest` server-side apply with `apply_only=true` (does not destroy on `terraform destroy`) |
-| `k8s/helm` | Argo CD chart (Helm) + `AppProject` resources + the **platform-root** Application that points at `oracle-gitops/platform/_groups`. Argo CD takes over from here. |
+| `k8s/helm` | Argo CD chart (Helm) + a single **cluster-root** Application that points at `oracle-gitops/cluster/`. From there Argo CD reconciles its own config (AppProjects, the environments ApplicationSet, and the platform-root Application) and takes over. |
 
 Everything beyond Argo CD itself — Longhorn, cert-manager, external-dns,
 nginx-gateway, cnpg, k8s-monitoring, mimir, loki, grafana,
