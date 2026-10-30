@@ -1,14 +1,15 @@
 # oracle-infra
 
 Oracle Cloud Infrastructure (OCI) Always Free homelab for the **Harus**
-project. K3s on ARM A1.Flex split across **1 server + N workers**. Ingress
+project. K3s on **one ARM A1.Flex server (2 OCPUs / 12 GB)** with no workers,
+within the current Always Free allowance. Ingress
 goes through an OCI Flexible Network Load Balancer provisioned by the **OCI
 Cloud Controller Manager (CCM)** from a `Service type=LoadBalancer`. State
 lives in Terraform Cloud (org `Harus`), execution mode is local — plan/apply
 run on your machine, state stays remote.
 
 This repo owns **only** the cloud infrastructure plus the Argo CD bootstrap.
-The rest of the cluster (Longhorn, cert-manager, gateway-api, monitoring,
+The rest of the cluster (Longhorn, cert-manager, gateway-api,
 postgres, etc.) lives in [`leogues/oracle-gitops`](https://github.com/leogues/oracle-gitops)
 and is reconciled by Argo CD running inside the cluster.
 
@@ -50,27 +51,34 @@ Naming convention and tag taxonomy are documented in
 | `k8s/helm` | Argo CD chart (Helm) + a single **cluster-root** Application that points at `oracle-gitops/cluster/`. From there Argo CD reconciles its own config (AppProjects, the environments ApplicationSet, and the platform-root Application) and takes over. |
 
 Everything beyond Argo CD itself — Longhorn, cert-manager, external-dns,
-nginx-gateway, cnpg, k8s-monitoring, mimir, loki, grafana,
-argocd-image-updater, gateway-api CRDs, prometheus-operator-crds — is
+nginx-gateway, cnpg, argocd-image-updater, gateway-api CRDs — is
 managed by Argo CD from the gitops repo.
+
+Observability (k8s-monitoring, Mimir, Loki, Grafana and Prometheus CRDs)
+is commented out in GitOps. Its configuration is preserved for later use.
 
 ## Free tier footprint
 
-All resources are Always Free:
+The configured footprint targets Always Free. Allowances are shared with
+other resources in the tenancy and apply in its home region:
 
 | Resource                                              | Count  | Free tier limit                       |
 | ----------------------------------------------------- | ------ | ------------------------------------- |
 | VCN                                                   | 1      | 2                                     |
 | IGW / NAT GW / Service GW                             | 1 each | unlimited                             |
 | Public + private subnets                              | 1 + 1  | unlimited                             |
-| VM A1.Flex 2 OCPU / 12 GB / 100 GB (server + workers) | 1 + N  | 4 OCPU / 24 GB / 200 GB block storage |
+| VM A1.Flex 2 OCPU / 12 GB / 100 GB (server only)       | 1      | 2 OCPU / 12 GB / 200 GB boot + block storage |
 | Flexible Network Load Balancer (CCM-managed)          | 1      | 1                                     |
 | Egress                                                | —      | 10 TB/month                           |
 
-Default sizing fits 1 server + 1 worker. Bump `worker_size` only if free-tier
-room allows.
+`worker_size` defaults to `0` and rejects additional workers: the server
+already uses the entire 2 OCPU / 12 GB allowance (1,500 OCPU-hours and
+9,000 GB-hours per month). PostgreSQL, Longhorn data replicas and the nginx
+gateway also use one replica. This deployment has no node redundancy.
 
-Object storage for Mimir / Loki is **Cloudflare R2** (10 GB free), not OCI.
+See [the current limits and official sources](docs/oracle-always-free-2026-10-30.md).
+The preserved Mimir / Loki configuration uses Cloudflare R2; those stacks
+are disabled.
 
 ## Network shape
 
@@ -167,7 +175,7 @@ $EDITOR infra/envs/prod/<layer>/terraform.tfvars
 | `compartment_ocid`        | target compartment OCID                   | iam, net, compute   |
 | `ssh_public_key`          | SSH pubkey for the `ubuntu` user          | compute             |
 | `cloudflare_tunnel_token` | Zero Trust tunnel token from CF dashboard | compute             |
-| `worker_size`             | Number of k3s worker VMs (default 1)      | compute             |
+| `worker_size`             | Additional k3s worker VMs (must be 0)     | compute             |
 | `vcn_cidr`                | VCN CIDR (default `10.0.0.0/16`)          | net                 |
 | `public_subnet_cidrs`     | Public subnet CIDRs                       | net                 |
 | `private_subnet_cidrs`    | Private subnet CIDRs                      | net                 |

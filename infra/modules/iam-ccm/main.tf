@@ -27,6 +27,7 @@ resource "oci_identity_policy" "ccm" {
 
   statements = [
     "Allow dynamic-group ${oci_identity_dynamic_group.k3s_nodes.name} to manage load-balancers in compartment id ${var.compartment_ocid}",
+    "Allow dynamic-group ${oci_identity_dynamic_group.k3s_nodes.name} to manage network-load-balancers in compartment id ${var.compartment_ocid}",
     "Allow dynamic-group ${oci_identity_dynamic_group.k3s_nodes.name} to use virtual-network-family in compartment id ${var.compartment_ocid}",
     "Allow dynamic-group ${oci_identity_dynamic_group.k3s_nodes.name} to manage instances in compartment id ${var.compartment_ocid}",
     "Allow dynamic-group ${oci_identity_dynamic_group.k3s_nodes.name} to read instance-family in compartment id ${var.compartment_ocid}",

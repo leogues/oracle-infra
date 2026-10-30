@@ -1,4 +1,6 @@
 region           = "sa-vinhedo-1"
+# One server (2 OCPUs / 12 GB) uses the full current Always Free allowance.
+worker_size      = 0
 user_ocid        = "ocid1.user.oc1..xxx"
 fingerprint      = "aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99:00"
 tenancy_ocid     = "ocid1.tenancy.oc1..xxx"
