@@ -77,5 +77,5 @@ The `sops-secrets` module decrypts each file in memory and creates the `kubernet
 | `argocd` | repo creds (GitHub App for `oracle-gitops`, etc.) | Argo CD, image-updater |
 | `database` | `superuser-secret`, `user-secret` | cnpg-cluster (Postgres) |
 | `dns` | Cloudflare API token | cert-manager DNS-01, external-dns |
-| `monitoring` | `grafana-admin`, `s3-credentials`, `mimir-s3-credentials` | Grafana, Loki, Mimir |
+| `monitoring` | `grafana-admin`, `clickhouse-auth`; legacy `s3-credentials`, `mimir-s3-credentials` | Grafana, ClickHouse bootstrap and OTel Collector; legacy Loki/Mimir remain disabled |
 | `production` | per-app env secrets (`live-link-secret`, `music-hub-secret`, …) | Application deployments via `envFrom` |
