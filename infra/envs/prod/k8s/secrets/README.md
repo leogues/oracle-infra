@@ -78,4 +78,6 @@ The `sops-secrets` module decrypts each file in memory and creates the `kubernet
 | `database` | `superuser-secret`, `user-secret` | cnpg-cluster (Postgres) |
 | `dns` | Cloudflare API token | cert-manager DNS-01, external-dns |
 | `monitoring` | `grafana-admin`, `clickhouse-auth`; legacy `s3-credentials`, `mimir-s3-credentials` | Grafana, ClickHouse bootstrap and OTel Collector; legacy Loki/Mimir remain disabled |
+| `loom` | `loom-secrets` | Loom ClickHouse password and root signing/sealing key |
+| `monitoring` | `loom-clickhouse-auth` | Password hash used by the Loom SQL bootstrap Job |
 | `production` | per-app env secrets (`live-link-secret`, `music-hub-secret`, …) | Application deployments via `envFrom` |
